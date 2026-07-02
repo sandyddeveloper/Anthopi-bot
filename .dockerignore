@@ -1,0 +1,15 @@
+.venv
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+.git
+.gitignore
+.DS_Store
+*.sqlite3
+/media/
+/staticfiles/
+node_modules/
