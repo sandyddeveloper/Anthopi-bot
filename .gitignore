@@ -149,6 +149,7 @@ activemq-data/
 
 # Environments
 .env
+.env.*
 .envrc
 .venv
 env/
@@ -156,6 +157,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Django collectstatic output
+staticfiles/
 
 # Spyder project settings
 .spyderproject
