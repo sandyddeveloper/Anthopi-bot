@@ -18,8 +18,20 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "apps.accounts",
-    "apps.socials",
+    "apps.authentication",
+    "apps.organization",
+    "apps.workspace",
+    "apps.users",
+    "apps.projects",
+    "apps.ai_agents",
+    "apps.integrations",
+    "apps.knowledge",
+    "apps.workflow_engine",
     "apps.scheduler",
+    "apps.ai_chat",
+    "apps.notifications",
+    "apps.audit_logs",
+    "apps.socials",
     "apps.worker",
 ]
 
@@ -76,6 +88,14 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Anthopi-bot API",
+    "DESCRIPTION": "Swagger / OpenAPI docs for Anthopi-bot",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
