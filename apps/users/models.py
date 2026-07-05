@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from apps.common.models import BaseModel
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -98,3 +100,46 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+class EmploymentType(BaseModel):
+    name = models.CharField(max_length=100) # e.g. Full-Time
+    code = models.CharField(max_length=100, unique=True) # e.g. full_time
+
+    def __str__(self):
+        return self.name
+
+class EmploymentStatus(BaseModel):
+    name = models.CharField(max_length=100) # e.g. Active, On Leave, Terminated
+    code = models.CharField(max_length=100, unique=True) # e.g. active
+
+    def __str__(self):
+        return self.name
+
+class EmployeeProfile(BaseModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employee_profile')
+    employee_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
+    organization = models.ForeignKey('organization.Organization', on_delete=models.CASCADE, related_name='employee_profiles')
+    department = models.ForeignKey('organization.Department', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profiles')
+    team = models.ForeignKey('organization.Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profiles')
+    designation = models.ForeignKey('organization.Designation', on_delete=models.SET_NULL, null=True, blank=True, related_name='employee_profiles')
+    reporting_manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reportees')
+    date_of_joining = models.DateField(null=True, blank=True)
+    employment_type = models.ForeignKey(EmploymentType, on_delete=models.SET_NULL, null=True, blank=True)
+    employment_status = models.ForeignKey(EmploymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
+    work_location = models.CharField(max_length=255, blank=True)
+    emergency_contact = models.JSONField(default=dict, blank=True)
+    skills = models.JSONField(default=list, blank=True)
+    profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.full_name or self.user.email} Profile"
+
+class EmployeeDocument(BaseModel):
+    employee_profile = models.ForeignKey(EmployeeProfile, on_delete=models.CASCADE, related_name='documents')
+    document_name = models.CharField(max_length=255)
+    document_file = models.FileField(upload_to='employee_docs/')
+    document_type = models.CharField(max_length=100, blank=True) # e.g. Resume, Contract, ID
+
+    def __str__(self):
+        return f"{self.document_name} for {self.employee_profile.user.email}"
+
