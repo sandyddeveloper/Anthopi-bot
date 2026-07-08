@@ -11,9 +11,10 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_spectacular.utils import extend_schema, inline_serializer
 
-from apps.knowledge.models import Folder, File, FileVersion
-from apps.knowledge.serializers import FolderSerializer, FileSerializer, FileVersionSerializer
+from apps.knowledge.models import Folder, File, FileVersion, KnowledgeCollection, KnowledgeItem, KnowledgePermission
+from apps.knowledge.serializers import FolderSerializer, FileSerializer, FileVersionSerializer, KnowledgeCollectionSerializer, KnowledgeItemSerializer, KnowledgePermissionSerializer
 from apps.projects.models import ProjectMember
+from apps.ai_agents.models import Agent
 
 def filter_visible_files(queryset, user):
     if user.is_superuser:
@@ -426,3 +427,133 @@ class FileVersionListCreateAPIView(APIView):
         file_obj.save(update_fields=['file_path', 'file_size'])
 
         return Response(FileVersionSerializer(version_rec).data, status=status.HTTP_201_CREATED)
+
+
+# ----------------- Knowledge Collections -----------------
+
+def get_org_context(request):
+    org = getattr(request, 'organization', None) or request.user.organization
+    if not org and not request.user.is_superuser:
+        raise PermissionDenied("Organization context required.")
+    return org
+
+
+class KnowledgeCollectionListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(summary="List knowledge collections", responses={200: KnowledgeCollectionSerializer(many=True)}, tags=["Knowledge Collections"])
+    def get(self, request):
+        org = get_org_context(request)
+        if request.user.is_superuser:
+            queryset = KnowledgeCollection.objects.filter(is_deleted=False)
+        else:
+            queryset = KnowledgeCollection.objects.filter(organization=org, is_deleted=False)
+            
+        serializer = KnowledgeCollectionSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(summary="Create a knowledge collection", request=KnowledgeCollectionSerializer, responses={201: KnowledgeCollectionSerializer}, tags=["Knowledge Collections"])
+    def post(self, request):
+        org = get_org_context(request)
+        serializer = KnowledgeCollectionSerializer(data=request.data)
+        if serializer.is_valid():
+            collection = serializer.save(organization=org, created_by=request.user)
+            return Response(KnowledgeCollectionSerializer(collection).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class KnowledgeCollectionDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk, org):
+        try:
+            if org is None:
+                return KnowledgeCollection.objects.get(id=pk, is_deleted=False)
+            return KnowledgeCollection.objects.get(id=pk, organization=org, is_deleted=False)
+        except KnowledgeCollection.DoesNotExist:
+            raise NotFound("Knowledge collection not found.")
+
+    @extend_schema(summary="Retrieve knowledge collection details", responses={200: KnowledgeCollectionSerializer}, tags=["Knowledge Collections"])
+    def get(self, request, pk):
+        org = get_org_context(request) if not request.user.is_superuser else None
+        collection = self.get_object(pk, org)
+        serializer = KnowledgeCollectionSerializer(collection)
+        return Response(serializer.data)
+
+    @extend_schema(summary="Update knowledge collection", request=KnowledgeCollectionSerializer, responses={200: KnowledgeCollectionSerializer}, tags=["Knowledge Collections"])
+    def put(self, request, pk):
+        org = get_org_context(request) if not request.user.is_superuser else None
+        collection = self.get_object(pk, org)
+        serializer = KnowledgeCollectionSerializer(collection, data=request.data, partial=True)
+        if serializer.is_valid():
+            collection = serializer.save(updated_by=request.user)
+            return Response(KnowledgeCollectionSerializer(collection).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(summary="Delete a knowledge collection", responses={204: None}, tags=["Knowledge Collections"])
+    def delete(self, request, pk):
+        org = get_org_context(request) if not request.user.is_superuser else None
+        collection = self.get_object(pk, org)
+        collection.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class KnowledgeCollectionAssignAgentAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(summary="Assign or remove agent from collection", request=inline_serializer(
+        name="AgentAssignmentRequest",
+        fields={
+            "agent_id": serializers.UUIDField(),
+            "action": serializers.ChoiceField(choices=["assign", "remove"])
+        }
+    ), responses={200: KnowledgeCollectionSerializer}, tags=["Knowledge Collections"])
+    def post(self, request, pk):
+        org = get_org_context(request)
+        collection = get_object_or_404(KnowledgeCollection, id=pk, organization=org, is_deleted=False)
+        
+        agent_id = request.data.get('agent_id')
+        action = request.data.get('action')
+        
+        if not agent_id or action not in ['assign', 'remove']:
+            return Response({"detail": "agent_id and action ('assign' or 'remove') are required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        agent = get_object_or_404(Agent, id=agent_id, organization=org, is_deleted=False)
+        
+        if action == 'assign':
+            collection.agents.add(agent)
+        else:
+            collection.agents.remove(agent)
+            
+        return Response(KnowledgeCollectionSerializer(collection).data)
+
+
+class KnowledgeCollectionAddItemAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(summary="Add or remove file from collection", request=inline_serializer(
+        name="FileAssignmentRequest",
+        fields={
+            "file_id": serializers.UUIDField(),
+            "action": serializers.ChoiceField(choices=["add", "remove"])
+        }
+    ), responses={200: KnowledgeCollectionSerializer}, tags=["Knowledge Collections"])
+    def post(self, request, pk):
+        org = get_org_context(request)
+        collection = get_object_or_404(KnowledgeCollection, id=pk, organization=org, is_deleted=False)
+        
+        file_id = request.data.get('file_id')
+        action = request.data.get('action')
+        
+        if not file_id or action not in ['add', 'remove']:
+            return Response({"detail": "file_id and action ('add' or 'remove') are required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        file_obj = get_object_or_404(File, id=file_id, organization=org, is_deleted=False)
+        
+        if action == 'add':
+            KnowledgeItem.objects.get_or_create(collection=collection, file=file_obj)
+        else:
+            KnowledgeItem.objects.filter(collection=collection, file=file_obj).delete()
+            
+        return Response(KnowledgeCollectionSerializer(collection).data)
+

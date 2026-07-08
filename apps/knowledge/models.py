@@ -42,3 +42,42 @@ class FileVersion(BaseModel):
 
     def __str__(self):
         return f"{self.file.name} v{self.version_number}"
+
+
+class KnowledgeCollection(BaseModel):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='knowledge_collections')
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    agents = models.ManyToManyField('ai_agents.Agent', related_name='knowledge_collections', blank=True)
+
+    def __str__(self):
+        return self.name
+
+
+class KnowledgeItem(BaseModel):
+    collection = models.ForeignKey(KnowledgeCollection, on_delete=models.CASCADE, related_name='items')
+    file = models.ForeignKey(File, on_delete=models.CASCADE, related_name='knowledge_items')
+
+    class Meta:
+        unique_together = ('collection', 'file')
+
+    def __str__(self):
+        return f"{self.collection.name} - {self.file.name}"
+
+
+class KnowledgePermission(BaseModel):
+    ACCESS_LEVEL_CHOICES = [
+        ('read', 'Read'),
+        ('write', 'Write'),
+        ('admin', 'Admin'),
+    ]
+
+    collection = models.ForeignKey(KnowledgeCollection, on_delete=models.CASCADE, related_name='permissions')
+    role = models.ForeignKey('authentication.Role', on_delete=models.SET_NULL, null=True, blank=True, related_name='knowledge_permissions')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='knowledge_permissions')
+    access_level = models.CharField(max_length=50, choices=ACCESS_LEVEL_CHOICES, default='read')
+
+    def __str__(self):
+        target = self.user.email if self.user else (self.role.name if self.role else 'Unknown')
+        return f"{self.collection.name} permission for {target}"
+
