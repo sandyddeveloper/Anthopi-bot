@@ -35,8 +35,6 @@ def test_workspace_and_enterprise_flows():
 
     # 2. Setup Users
     super_admin = User.objects.create_superuser(email="superadmin@acme.com", password="password123")
-    super_admin.organization = org
-    super_admin.save()
 
     org_admin = User.objects.create_user(email="admin@acme.com", password="password123", full_name="Admin Alice")
     org_admin.organization = org
@@ -90,7 +88,7 @@ def test_workspace_and_enterprise_flows():
         "employment_status": str(emp_status_act.id),
         "work_location": "Remote",
         "skills": ["Python", "Django"]
-    })
+    }, format='json')
     assert new_emp_response.status_code == status.HTTP_201_CREATED
     new_user = User.objects.get(email="new_dev@acme.com")
     assert new_user.employee_profile.employee_id == "EMP-999"
@@ -115,7 +113,7 @@ def test_workspace_and_enterprise_flows():
     response = client.post(bulk_status_url, {
         "ids": [str(new_user.id)],
         "status": "pending"
-    })
+    }, format='json')
     assert response.status_code == status.HTTP_200_OK
     new_user.refresh_from_db()
     assert new_user.status == 'pending'
@@ -145,7 +143,7 @@ def test_workspace_and_enterprise_flows():
         "priority": "high",
         "status": "in_progress",
         "visibility": "organization"
-    })
+    }, format='json')
     assert proj_response.status_code == status.HTTP_201_CREATED
     project = Project.objects.get(code="AP-101")
     assert project.name == "Apollo Project"
@@ -156,7 +154,7 @@ def test_workspace_and_enterprise_flows():
     response = client.post(member_url, {
         "user": str(employee_user.id),
         "role": "employee"
-    })
+    }, format='json')
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # Assign member (admin succeeds)
@@ -164,7 +162,7 @@ def test_workspace_and_enterprise_flows():
     response = client.post(member_url, {
         "user": str(employee_user.id),
         "role": "employee"
-    })
+    }, format='json')
     assert response.status_code == status.HTTP_201_CREATED
     assert ProjectMember.objects.filter(project=project, user=employee_user).exists()
 
@@ -246,7 +244,7 @@ def test_workspace_and_enterprise_flows():
     dashboard_url = reverse('dashboard-stats')
     dash_res = client.get(dashboard_url)
     assert dash_res.status_code == status.HTTP_200_OK
-    dash_json = dash_res.json()
+    dash_json = dash_res.json()['data']
     assert dash_json['cards']['total_employees'] >= 4
     assert dash_json['cards']['projects'] == 1
 
@@ -259,4 +257,4 @@ def test_workspace_and_enterprise_flows():
     search_url = reverse('global-search')
     search_res = client.get(f"{search_url}?q=Apollo")
     assert search_res.status_code == status.HTTP_200_OK
-    assert len(search_res.json()['projects']) > 0
+    assert len(search_res.json()['data']['projects']) > 0
