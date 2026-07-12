@@ -61,5 +61,18 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ../staticfiles:/staticfiles
+      - ../media:/media
+    depends_on:
+      - web
+    restart: unless-stopped
+
 volumes:
   postgres_data:
