@@ -596,8 +596,14 @@ class IncomingWebhookAPIView(APIView):
             workflow_execution=execution
         )
 
-        # Trigger Celery job runner
-        execute_workflow_task.delay(str(execution.id))
+        # Trigger Celery job runner (gracefully handle missing broker)
+        try:
+            execute_workflow_task.delay(str(execution.id))
+        except Exception:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Celery broker unavailable; execution %s queued but not dispatched.", execution.id
+            )
 
         return Response({
             "status": "accepted",
