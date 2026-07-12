@@ -2,7 +2,7 @@ from django.urls import path
 from apps.authentication.views import (
     LoginAPIView, LogoutAPIView, LogoutAllAPIView, TokenRefreshAPIView,
     UserSessionListAPIView, UserSessionRevokeAPIView, PermissionListAPIView,
-    RoleListCreateAPIView, RoleDetailAPIView
+    RoleListCreateAPIView, RoleDetailAPIView, UserPermissionsAPIView
 )
 
 urlpatterns = [
@@ -15,6 +15,7 @@ urlpatterns = [
     path('sessions/<uuid:pk>/', UserSessionRevokeAPIView.as_view(), name='session-detail'),
     
     path('permissions/', PermissionListAPIView.as_view(), name='permission-list'),
+    path('my-permissions/', UserPermissionsAPIView.as_view(), name='my-permissions'),
     
     path('roles/', RoleListCreateAPIView.as_view(), name='role-list'),
     path('roles/<uuid:pk>/', RoleDetailAPIView.as_view(), name='role-detail'),

@@ -332,3 +332,41 @@ class RoleDetailAPIView(APIView):
         response = Response(status=status.HTTP_200_OK)
         response.custom_message = "Role soft deleted successfully."
         return response
+
+
+class UserPermissionsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Retrieve permissions of the current logged-in user",
+        request=None,
+        responses={200: inline_serializer(
+            name="UserPermissionsResponse",
+            fields={
+                "is_superuser": serializers.BooleanField(),
+                "role_code": serializers.CharField(allow_null=True),
+                "permissions": serializers.ListField(child=serializers.CharField())
+            }
+        )},
+        tags=["Profile"]
+    )
+    def get(self, request):
+        user = request.user
+        role_code = user.role.code if user.role else None
+        
+        if user.is_superuser:
+            # Superusers have all permissions
+            perms = list(Permission.objects.filter(is_deleted=False).values_list('code', flat=True))
+            # Also add wildcard
+            perms.append("*")
+        else:
+            if user.role:
+                perms = list(user.role.permissions.filter(is_deleted=False).values_list('code', flat=True))
+            else:
+                perms = []
+
+        return Response({
+            "is_superuser": user.is_superuser,
+            "role_code": role_code,
+            "permissions": perms
+        })

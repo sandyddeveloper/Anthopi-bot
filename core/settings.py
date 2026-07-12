@@ -184,6 +184,11 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Swagger / OpenAPI docs for Anthopi-bot",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "AgentVisibilityEnum": "apps.ai_agents.models.Agent.VISIBILITY_CHOICES",
+        "ProjectVisibilityEnum": "apps.projects.models.Project.VISIBILITY_CHOICES",
+        "FileVisibilityEnum": "apps.knowledge.models.File.VISIBILITY_CHOICES",
+    }
 }
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")

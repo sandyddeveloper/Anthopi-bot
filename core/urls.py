@@ -27,6 +27,8 @@ urlpatterns = [
     path("api/v1/", include("apps.workspace.urls")),
     path("api/v1/", include("apps.ai_agents.urls")),
     path("api/v1/", include("apps.ai_chat.urls")),
+    path("api/v1/", include("apps.workflow_engine.urls")),
+    path("api/v1/", include("apps.scheduler.urls")),
 
 ]
 

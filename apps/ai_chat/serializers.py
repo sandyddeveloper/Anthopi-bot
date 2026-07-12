@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 from apps.ai_chat.models import (
     Conversation, ConversationParticipant, Message, MessageAttachment,
     MemoryCategory, Memory, MemorySource, AIUsage, AIActivityLog
@@ -49,6 +50,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'organization', 'created_at', 'updated_at']
 
+    @extend_schema_field(MessageSerializer)
     def get_last_message(self, obj):
         last_msg = obj.messages.order_by('-created_at').first()
         if last_msg:

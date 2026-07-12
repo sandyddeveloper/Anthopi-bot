@@ -114,7 +114,7 @@ class AgentDetailAPIView(APIView):
 class AgentDuplicateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(summary="Duplicate an agent", responses={201: AgentSerializer}, tags=["AI Agents"])
+    @extend_schema(summary="Duplicate an agent", request=None, responses={201: AgentSerializer}, tags=["AI Agents"])
     def post(self, request, pk):
         org = get_org_context(request)
         agent = get_object_or_404(Agent, id=pk, organization=org, is_deleted=False)

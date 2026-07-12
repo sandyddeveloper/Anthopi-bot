@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.parsers import MultiPartParser, FormParser
-from drf_spectacular.utils import extend_schema, inline_serializer
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiTypes
 
 from apps.users.models import User, EmploymentType, EmploymentStatus, EmployeeProfile, EmployeeDocument
 from apps.users.serializers import (
@@ -163,6 +163,7 @@ class LogoutOtherDevicesAPIView(APIView):
 
     @extend_schema(
         summary="Logout other devices",
+        request=None,
         responses={200: inline_serializer(name="LogoutOthersResponse", fields={"detail": serializers.CharField()})},
         tags=["Profile"]
     )
@@ -451,6 +452,7 @@ class EmployeeDetailAPIView(APIView):
 
     @extend_schema(
         summary="Update employee details",
+        request=UserSerializer,
         responses={200: UserSerializer},
         tags=["Employees"]
     )
@@ -522,6 +524,7 @@ class EmployeeActivateAPIView(APIView):
 
     @extend_schema(
         summary="Activate employee",
+        request=None,
         responses={200: inline_serializer(name="EmployeeActivateResponse", fields={"detail": serializers.CharField()})},
         tags=["Employees"]
     )
@@ -542,6 +545,7 @@ class EmployeeDeactivateAPIView(APIView):
 
     @extend_schema(
         summary="Deactivate employee",
+        request=None,
         responses={200: inline_serializer(name="EmployeeDeactivateResponse", fields={"detail": serializers.CharField()})},
         tags=["Employees"]
     )
@@ -675,6 +679,7 @@ class EmployeeExportAPIView(APIView):
 
     @extend_schema(
         summary="Export employees to CSV",
+        responses={200: OpenApiTypes.BINARY},
         tags=["Employees"]
     )
     def get(self, request):

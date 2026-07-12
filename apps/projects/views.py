@@ -159,6 +159,7 @@ class ProjectArchiveAPIView(APIView):
 
     @extend_schema(
         summary="Archive a project",
+        request=None,
         responses={200: inline_serializer(name="ProjectArchiveResponse", fields={"detail": serializers.CharField()})},
         tags=["Projects"]
     )
@@ -177,6 +178,7 @@ class ProjectRestoreAPIView(APIView):
 
     @extend_schema(
         summary="Restore an archived project",
+        request=None,
         responses={200: inline_serializer(name="ProjectRestoreResponse", fields={"detail": serializers.CharField()})},
         tags=["Projects"]
     )

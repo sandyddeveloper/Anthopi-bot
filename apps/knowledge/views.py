@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.parsers import MultiPartParser, FormParser
-from drf_spectacular.utils import extend_schema, inline_serializer
+from drf_spectacular.utils import extend_schema, OpenApiTypes, inline_serializer
 
 from apps.knowledge.models import Folder, File, FileVersion, KnowledgeCollection, KnowledgeItem, KnowledgePermission
 from apps.knowledge.serializers import FolderSerializer, FileSerializer, FileVersionSerializer, KnowledgeCollectionSerializer, KnowledgeItemSerializer, KnowledgePermissionSerializer
@@ -332,6 +332,7 @@ class FileDownloadAPIView(APIView):
 
     @extend_schema(
         summary="Download a file securely",
+        responses={200: OpenApiTypes.BINARY},
         tags=["Files & Folders"]
     )
     def get(self, request, pk):
