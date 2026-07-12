@@ -10,6 +10,8 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
+RUN chmod +x docker/entrypoint.sh
+
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+ENTRYPOINT ["sh", "docker/entrypoint.sh"]
