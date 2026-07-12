@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   web:
     build:
@@ -7,16 +5,33 @@ services:
       dockerfile: docker/Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      DEBUG: "True"
-      SECRET_KEY: "change-me"
-      ALLOWED_HOSTS: "localhost,127.0.0.1"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    env_file:
+      - ../.env
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
