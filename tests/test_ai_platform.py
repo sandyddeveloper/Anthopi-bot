@@ -8,7 +8,7 @@ from apps.projects.models import Project
 from apps.knowledge.models import File, Folder, KnowledgeCollection, KnowledgeItem
 from apps.ai_agents.models import AgentCategory, Agent, AIProvider, AIModel, Tool, AgentTool
 from apps.ai_chat.models import Conversation, Message, MemoryCategory, Memory, AIUsage, AIActivityLog
-from apps.ai_chat.orchestrator import AIOrchestrator
+from apps.ai_orchestrator.orchestrator import AIOrchestrator
 
 @pytest.mark.django_db
 def test_ai_platform_foundation_flow():

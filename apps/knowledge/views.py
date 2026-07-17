@@ -2,6 +2,7 @@ import os
 from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse, Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status, serializers
 from rest_framework.views import APIView
@@ -432,11 +433,7 @@ class FileVersionListCreateAPIView(APIView):
 
 # ----------------- Knowledge Collections -----------------
 
-def get_org_context(request):
-    org = getattr(request, 'organization', None) or request.user.organization
-    if not org and not request.user.is_superuser:
-        raise PermissionDenied("Organization context required.")
-    return org
+from apps.common.utils import get_org_context
 
 
 class KnowledgeCollectionListCreateAPIView(APIView):

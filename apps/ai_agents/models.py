@@ -161,3 +161,15 @@ class ToolParameter(BaseModel):
 
     class Meta:
         unique_together = ('tool', 'name')
+
+
+class AgentLearning(BaseModel):
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name='learnings')
+    successful_prompt = models.TextField(blank=True)
+    failed_prompt = models.TextField(blank=True)
+    feedback = models.TextField(blank=True)
+    corrections = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Learning for {self.agent.name}"
+

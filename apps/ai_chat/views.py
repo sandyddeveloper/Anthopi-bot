@@ -3,27 +3,22 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from drf_spectacular.utils import extend_schema
 
 from apps.ai_chat.models import (
-    Conversation, ConversationParticipant, Message, MessageAttachment,
+    Conversation, ConversationParticipant,
     Memory, AIUsage, AIActivityLog, MemoryCategory
 )
 from apps.ai_chat.serializers import (
     ConversationSerializer, MessageSerializer, MemorySerializer,
-    AIUsageSerializer, AIActivityLogSerializer, MemoryCategorySerializer
+    AIUsageSerializer, MemoryCategorySerializer
 )
-from apps.ai_chat.orchestrator import AIOrchestrator
-from apps.ai_agents.models import Agent
+from apps.ai_orchestrator.orchestrator import AIOrchestrator
 
-def get_org_context(request):
-    org = getattr(request, 'organization', None) or request.user.organization
-    if not org and not request.user.is_superuser:
-        raise PermissionDenied("Organization context required.")
-    return org
+from apps.common.utils import get_org_context
 
 
 # ----------------- Conversations -----------------

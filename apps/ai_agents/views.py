@@ -19,11 +19,7 @@ from apps.ai_agents.serializers import (
     PromptSerializer, PromptVersionSerializer, ToolSerializer, AgentToolSerializer
 )
 
-def get_org_context(request):
-    org = getattr(request, 'organization', None) or request.user.organization
-    if not org and not request.user.is_superuser:
-        raise PermissionDenied("Organization context required.")
-    return org
+from apps.common.utils import get_org_context
 
 
 # ----------------- Agent Categories -----------------
@@ -448,3 +444,35 @@ class PromptDetailAPIView(APIView):
         prompt = self.get_object(pk, org)
         prompt.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PromptRollbackAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(summary="Rollback prompt template to a specific version", responses={200: PromptSerializer}, tags=["Prompts"])
+    def post(self, request, pk):
+        org = get_org_context(request)
+        prompt = get_object_or_404(Prompt, id=pk, organization=org, is_deleted=False)
+        version_num = request.data.get('version_number')
+        if not version_num:
+            return Response({"error": "version_number is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        version = get_object_or_404(PromptVersion, prompt=prompt, version_number=version_num)
+        
+        with transaction.atomic():
+            prompt.template_text = version.template_text
+            prompt.updated_by = request.user
+            prompt.save()
+            
+            # Create a new version representing this rollback
+            last_version = prompt.versions.order_by('-version_number').first()
+            next_version_num = (last_version.version_number + 1) if last_version else 1
+            PromptVersion.objects.create(
+                prompt=prompt,
+                version_number=next_version_num,
+                template_text=prompt.template_text,
+                created_by=request.user
+            )
+            
+        return Response(PromptSerializer(prompt).data)
+

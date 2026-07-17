@@ -29,7 +29,17 @@ urlpatterns = [
     path("api/v1/", include("apps.ai_chat.urls")),
     path("api/v1/", include("apps.workflow_engine.urls")),
     path("api/v1/", include("apps.scheduler.urls")),
-
+    path("api/v1/orchestrator/", include("apps.ai_orchestrator.urls")),
+    path("api/v1/planner/", include("apps.ai_planner.urls")),
+    path("api/v1/reasoning/", include("apps.ai_reasoning.urls")),
+    path("api/v1/memory/", include("apps.ai_memory.urls")),
+    path("api/v1/rag/", include("apps.ai_rag.urls")),
+    path("api/v1/tools/", include("apps.ai_tools.urls")),
+    path("api/v1/feedback/", include("apps.ai_feedback.urls")),
+    path("api/v1/analytics/", include("apps.ai_analytics.urls")),
+    path("api/v1/approvals/", include("apps.ai_approvals.urls")),
+    path("api/v1/reports/", include("apps.ai_reports.urls")),
+    path("api/v1/jobs/", include("apps.ai_jobs.urls")),
 ]
 
 if settings.DEBUG:

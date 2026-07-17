@@ -4,7 +4,8 @@ from apps.ai_agents.views import (
     AgentDuplicateAPIView, AgentInstructionListCreateAPIView, AgentInstructionDetailAPIView,
     ToolListCreateAPIView, AgentToolListCreateAPIView, AgentToolDetailAPIView,
     AIProviderListAPIView, AIModelListAPIView, OrganizationModelListCreateAPIView,
-    AISettingsDetailAPIView, PromptCategoryListAPIView, PromptListCreateAPIView, PromptDetailAPIView
+    AISettingsDetailAPIView, PromptCategoryListAPIView, PromptListCreateAPIView, PromptDetailAPIView,
+    PromptRollbackAPIView
 )
 
 urlpatterns = [
@@ -28,4 +29,5 @@ urlpatterns = [
     path('prompts/categories/', PromptCategoryListAPIView.as_view(), name='prompt-category-list'),
     path('prompts/', PromptListCreateAPIView.as_view(), name='prompt-list-create'),
     path('prompts/<uuid:pk>/', PromptDetailAPIView.as_view(), name='prompt-detail'),
+    path('prompts/<uuid:pk>/rollback/', PromptRollbackAPIView.as_view(), name='prompt-rollback'),
 ]

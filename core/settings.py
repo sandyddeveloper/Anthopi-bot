@@ -44,6 +44,17 @@ INSTALLED_APPS = [
     "apps.audit_logs",
     "apps.socials",
     "apps.worker",
+    "apps.ai_orchestrator",
+    "apps.ai_planner",
+    "apps.ai_reasoning",
+    "apps.ai_memory",
+    "apps.ai_rag",
+    "apps.ai_tools",
+    "apps.ai_feedback",
+    "apps.ai_analytics",
+    "apps.ai_approvals",
+    "apps.ai_reports",
+    "apps.ai_jobs",
 ]
 
 MIDDLEWARE = [
